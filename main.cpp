@@ -4,14 +4,18 @@
 class LindenmayerSystem {
 private:
     Renderer& renderer;
-
+    double deviation;
+    double reduction;
 public:
-    LindenmayerSystem(Renderer& renderer) : renderer(renderer) {}
+    LindenmayerSystem(Renderer& renderer) : renderer(renderer) {
+        this->deviation = 0.5;
+        this->reduction = 0.5;
+    }
 
     // Recursive function to draw branches
     void drawBranch(int x, int y, double length, double angle, int level) {
-        srand(level + x + y + 1
-        );
+        srand(time(NULL));
+
         if (level < 0) {
             return; // Base case: stop recursion
         }
@@ -22,21 +26,16 @@ public:
 
         // Draw the branch
         renderer.drawLine(x, y, xEnd, yEnd, 0x00FF00);
+        // Draw the continuation
+        drawBranch(xEnd, yEnd, length, angle, level - 1);
 
         // Flip a coin to decide if we should draw a sub-branch
-        if (rand() % 2 == 0) {
-            drawBranch(xEnd, yEnd, length * 1, angle - 0.3, level - 1);
+        if (level % 2 == 0) {
+            drawBranch(xEnd, yEnd, length*this->reduction, angle - this->deviation, level - 1);
         }
-        if (rand() % 2 == 0) {
-            drawBranch(xEnd, yEnd, length * 1, angle + 0.3, level - 1);
+        else {
+            drawBranch(xEnd, yEnd, length*this->reduction, angle + this->deviation, level - 2);
         }
-                if (rand() % 2 == 0) {
-            drawBranch(xEnd, yEnd, length * 1, angle - 0.8, level - 1);
-        }
-        if (rand() % 2 == 0) {
-            drawBranch(xEnd, yEnd, length * 1, angle + 0.8, level - 1);
-        }
-
     }
 };
 
@@ -55,7 +54,7 @@ int main() {
         renderer.clear();
 
         // Draw branches with the Lindenmayer system
-        lSystem.drawBranch(WIDTH / 2, HEIGHT - 50, 100.0, -M_PI / 2, 10);
+        lSystem.drawBranch(WIDTH / 2, HEIGHT - 10, 50.0, -M_PI / 2, 10);
 
         // Present the screen
         renderer.update();
