@@ -27,7 +27,10 @@ public:
     Point* end;
     Edge(Point* start, Point* end) : start(start), end(end) {}
 };
-
+enum flag{
+    NO_OVERLAP = (1 << 0),
+    NOISE = (1 << 1),
+};
 class Tex {
     private:
         Uint32* pixels;
@@ -69,13 +72,21 @@ class Tex {
         int getHeight() {
             return this->height;
         }
-        void setPixel(int x, int y, int color , SDL_Renderer* renderer) {
-            if (x < 0 || x >= this->width || y < 0 || y >= this->height) {
+
+        void setPixel(int x, int y, int color , SDL_Renderer* renderer, int flag) {
+            if (x < 0 || x >= this->width || y < 0 || y >= this->height ){
+                return;
+            } else if (flag & NO_OVERLAP && this->pixels[y * this->width + x] != 0) {
                 return;
             } else {
+                if (flag & NOISE) {
+                    color = (color & 0xFEFEFE) + (rand() % 0x010101);
+
+                }
                 this->pixels[y * this->width + x] = color;
             }
             (void)renderer;
+            (void )flag;
         }
         void update(SDL_Renderer* renderer, SDL_Window* window) {
             this->surface = SDL_CreateRGBSurfaceFrom(
@@ -92,7 +103,7 @@ class Tex {
             this->texture = SDL_CreateTextureFromSurface(renderer, surface);
         }
 };
-typedef void (*drawFunction)(int, int, int, SDL_Renderer*);
+typedef void (*drawFunction)(int, int, int, SDL_Renderer*, int);
 class Renderer {
     /* 
         // Example usage:
@@ -118,15 +129,15 @@ class Renderer {
         SDL_Renderer* getRenderer();
         SDL_Window* getWindow();
         // those are the functions that you can use to draw directly to the screen
-        void drawPoint(std::function<void(int, int, int, SDL_Renderer*)> drawFunction, int x, int y, int color);
-        void drawLine(std::function<void(int, int, int, SDL_Renderer*)> drawFunction, int x1, int y1, int x2, int y2, int color);
-        void drawCircle(std::function<void(int, int, int, SDL_Renderer*)> drawFunction, int x, int y, int radius, int color);
+        void drawPoint(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, int x, int y, int color, int flag);
+        void drawLine(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, int x1, int y1, int x2, int y2, int color, int flag);
+        void drawCircle(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, int x, int y, int radius, int color, int flag);
 
-        void fillTriangle(std::function<void(int, int, int, SDL_Renderer*)> drawFunction, int x1, int y1, int x2, int y2, int x3, int y3, int color);
-        void fillPolygon(std::function<void(int, int, int, SDL_Renderer*)> drawFunction, std::vector<Point> vertices, int color);
+        void fillTriangle(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, int x1, int y1, int x2, int y2, int x3, int y3, int color, int flag);
+        void fillPolygon(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, std::vector<Point> vertices, int color, int flag);
         void drawTex(Tex* tex, int x, int y);
 
-        void setPixel(int x, int y, int color , SDL_Renderer* renderer) ;
+        void setPixel(int x, int y, int color , SDL_Renderer* renderer, int flag) ;
         // those are the functions that update the screen
         void update();
         void clear();
