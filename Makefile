@@ -1,7 +1,7 @@
 SRC = main.cpp src/Renderer.cpp
 OBJ = $(SRC:.cpp=.o)
 HEADER =
-LIBS = -lSDL2 
+LIBS = -lSDL2 -Ofast
 NAME = crystal
 CPPFLAGS = #-Wall -Wextra -Werror
 CC = c++

@@ -1,8 +1,12 @@
 #include "Renderer.hpp"
 // Constructor
-Renderer::Renderer(SDL_Renderer* renderer, SDL_Window* window) {
+Renderer::Renderer(SDL_Renderer* __attribute__((unused))renderer, SDL_Window* window) {
     this->window = window;
     this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
+    if (this->renderer == NULL) {
+        std::cout << "Renderer could not be created! SDL Error: " << SDL_GetError() << std::endl;
+    }
+
 }
 // Destructor
 Renderer::~Renderer() {

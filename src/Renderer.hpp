@@ -38,8 +38,9 @@ class Tex {
         SDL_Texture* texture;
         int width;
         int height;
+        double noise;
     public:
-        Tex(SDL_Renderer* renderer, SDL_Window* window, int width, int height) {
+        Tex(SDL_Renderer* renderer, SDL_Window* window, int width, int height, int noise = 1) {
             this->pixels = new Uint32[width * height];
             this->surface = SDL_CreateRGBSurfaceFrom(
                 this->pixels,  // The pixel data array
@@ -80,13 +81,23 @@ class Tex {
                 return;
             } else {
                 if (flag & NOISE) {
-                    color = (color & 0xFEFEFE) + (rand() % 0x010101);
+                    int r = rand() % 255 / this->noise;
+                    int g = rand() % 255 / this->noise;
+                    int b = rand() % 255 / this->noise;
+                    
+                    r += (color >> 16) & 0xFF;
+                    g += (color >> 8) & 0xFF;
+                    b += color & 0xFF;
+                    color = r << 16 | g << 8 | b;
 
                 }
                 this->pixels[y * this->width + x] = color;
             }
             (void)renderer;
             (void )flag;
+        }
+        void setNoise(double noise) {
+            this->noise = noise;
         }
         void update(SDL_Renderer* renderer, SDL_Window* window) {
             this->surface = SDL_CreateRGBSurfaceFrom(
