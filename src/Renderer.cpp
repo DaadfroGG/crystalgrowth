@@ -3,6 +3,7 @@
 Renderer::Renderer(SDL_Renderer* __attribute__((unused))renderer, SDL_Window* window) {
     this->window = window;
     this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_ShowCursor(SDL_DISABLE );
     if (this->renderer == NULL) {
         std::cout << "Renderer could not be created! SDL Error: " << SDL_GetError() << std::endl;
     }
@@ -104,6 +105,15 @@ void Renderer::fillPolygon(std::function<void(int, int, int, SDL_Renderer*, int)
     }
     fillTriangle(drawFunction, vertices[0].x, vertices[0].y, vertices[i + 1].x, vertices[i + 1].y, vertices[1].x, vertices[1].y, color, flag);
 }
+
+void Renderer::outlinePolygon(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, std::vector<Point> vertices, int color, int flag){
+    //Draw multiple lines for thickness
+    for (int i = 0; i < (int)vertices.size() - 1; i++) {
+        drawLine(drawFunction, vertices[i].x, vertices[i].y, vertices[i + 1].x, vertices[i + 1].y, color, flag);
+    }
+    drawLine(drawFunction, vertices[vertices.size() - 1].x, vertices[vertices.size() - 1].y, vertices[0].x, vertices[0].y, color, flag);
+}
+        
 
 void Renderer::drawTex(Tex* tex, int x, int y){
     SDL_Rect dst;

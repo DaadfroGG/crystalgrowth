@@ -14,7 +14,7 @@
 #define HEIGHT 1000
 #define POINT_RADIUS 5
 #define MAP_HEIGHT 1000
-#define MAP_WIDTH 1000
+#define MAP_WIDTH 1800
 class Point {
 public:
     int x, y;
@@ -146,6 +146,7 @@ class Renderer {
 
         void fillTriangle(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, int x1, int y1, int x2, int y2, int x3, int y3, int color, int flag);
         void fillPolygon(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, std::vector<Point> vertices, int color, int flag);
+        void outlinePolygon(std::function<void(int, int, int, SDL_Renderer*, int)> drawFunction, std::vector<Point> vertices, int color, int flag);
         void drawTex(Tex* tex, int x, int y);
 
         void setPixel(int x, int y, int color , SDL_Renderer* renderer, int flag) ;
