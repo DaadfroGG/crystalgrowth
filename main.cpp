@@ -1,6 +1,11 @@
 #include "src/Renderer.hpp"
 #include "src/Event.hpp"
 #include <cmath>
+#include <math.h>
+
+double clamp(double x, double a, double b) {
+    return fmax(a, fmin(b, x));
+}
 
 class Crystal {
 private:
@@ -13,13 +18,14 @@ private:
     int growthIterations = 0;
     double assymeetricity; // The assymetricity of the crystal tells how much variation in the growth rate there is in xy described in a 0-1 scale representing the percentage of the variation
     double impurity; // The impurity of the crystal tells how much variation in the growth rate there is
-    double total_material = 10000;
+    double total_material = 100000;
+    int seed;
 public:
     Crystal() {
         this->impurity = 0;
         this->assymeetricity = 0.5;
     }
-    void addNucleationSite(Point p, double rate, int color, int size, double impurity, int added_material = 0) {
+    void addNucleationSite(Point p, double rate, int color, int size, double impurity, int added_material = 0, int seed = 0) {
         if (this->nucleationSites.size() >= this->maxNumberOfNucleationSites) {
             if (rand() % 1000 > 10) {
                 this->removeNucleationSite(rand() % this->nucleationSites.size());
@@ -33,6 +39,7 @@ public:
         this->angles.push_back(rand() % 360);
         this->impurity = impurity;
         this->total_material += added_material;
+        this->seed = seed;
         //sometime remove a random nucleation site
 
     }
@@ -58,17 +65,48 @@ public:
                     this->removeNucleationSite(i);
                 }
                 //recude growth rate based on material amount
-
+                this->growthRates[i] *= this->total_material / 100000;
                 //Change color gradually based on time
                 int r = (int)(sin(SDL_GetTicks() * 0.001 + i) * 127 + 128);
                 int g = (int)(sin(SDL_GetTicks() * 0.001 + i + 2) * 127 + 128);
                 int b = (int)(sin(SDL_GetTicks() * 0.001 + i + 4) * 127 + 128);
-                this->colors[i] = r << 16 | g << 8 | b;
+
+                //sort the r g b values so its all the same color 
+
+                if (r > g) {
+                    std::swap(r, g);
+                }
+                if (g > b) {
+                    std::swap(g, b);
+                }
+                if (r > g) {
+                    std::swap(r, g);
+                }
+                // lower the saturation
+/* new_R=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(255R​,255G​,255B​)[0]mod2−1),0,1)×255)
+new_G=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(R255,G255,B255)[0]mod  2−1),0,1)×255)
+new_G=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(255R​,255G​,255B​)[0]mod2−1),0,1)×255)
+new_B=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(R255,G255,B255)[0]mod  2−1),0,1)×255)
+new_B=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(255R​,255G​,255B​)[0]mod2−1),0,1)×255) */
+               
+                //(change if its r, g or b depending on the crystal seed)
+                if (this->seed % 5 == 0) {
+                    this->colors[i] = (r << 16) | (g << 8) | b;
+                } else if (this->seed % 5 == 1) {
+                    this->colors[i] = (g << 16) | (b << 8) | r;
+                } else if (this->seed % 5 == 2) {
+                    this->colors[i] = (b << 16) | (r << 8) | g;
+                } else if (this->seed % 5 == 3) {
+                    this->colors[i] = (r << 16) | (b << 8) | g;
+                } else if (this->seed % 5 == 4) {
+                    this->colors[i] = (g << 16) | (r << 8) | b;
             }
         
         }
 
     }
+    }
+
     void getNucleationSite(int index, int *x, int *y, int *rate, int *color, double *size) {
         if (index < 0 || index >= (int)this->nucleationSites.size() || this->nucleationSites.size() == 0){
             return;
@@ -126,7 +164,7 @@ public:
                 //choose a random point between the two vertices (not the midpoint you dingus)
                 Point p3 = Point((p1.x + p2.x) / 2 + (rand() % 100 - 50), (p1.y + p2.y) / 2 + (rand() % 100 - 50));
                 //add a new nucleation site at 
-                this->addNucleationSite(p3, 1.51, 0xFFFFFF, 1, 225);
+                this->addNucleationSite(p3, 1.51, 0xFFFFFF, 1, 225, 0, this->seed);
             }
         }
     }
@@ -138,7 +176,7 @@ class Time {
     private:
         Uint32 startTicks;
         Uint32 pausedTicks;
-        int frameDelay = 1000 / 60;
+        int frameDelay = 1000 / 120;
         bool paused;
         bool started;
     public:
@@ -212,6 +250,9 @@ int main() {
 
     // Frame rate
     Time frameTime;
+    events.updateMousePosition();
+    int targetMouseX = 0;
+    int targetMouseY = 0;
     // Main loop
     while (!events.quit()) {
         // Start the frame time
@@ -229,8 +270,13 @@ int main() {
                 //remove all previous nucleation sites
                 crystal = Crystal();
                 //add a new nucleation site
-                crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFF00FF, 1, 225, 1000);
+                crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
             }
+            if (events.keyDown()) {
+               tex.clear();
+               crystal = Crystal();
+            }
+
         }
 
         // Adjust the size based on the desired growth rate
@@ -242,14 +288,31 @@ int main() {
         // Draw the texture
         renderer.drawTex(&tex, WIDTH / 2 - MAP_WIDTH / 2, HEIGHT / 2 - MAP_HEIGHT / 2);
 
-        // Draw the cursor as a triangle
         std::vector<Point> vertices;
-        vertices.push_back(Point(events.getMouseX(), events.getMouseY() - 10));
-        vertices.push_back(Point(events.getMouseX() + 10, events.getMouseY() + 10));
-        vertices.push_back(Point(events.getMouseX() - 10, events.getMouseY() + 10));
-        renderer.fillPolygon([&renderer](int x, int y, int color, SDL_Renderer* r, int __attribute__((unused))flag) {
-            renderer.setPixel(x, y, color, r, NO_OVERLAP);
-        }, vertices, 0x00FFFF, 0);
+
+        for (int lagrange = 0; lagrange < 10; ++lagrange) {
+            targetMouseX += (events.getMouseX() - targetMouseX) * lagrange * 0.01;
+            targetMouseY += (events.getMouseY() - targetMouseY) * lagrange * 0.01;
+            double lagrangeFactor = lagrange * 0.1; // Adjust the factor as needed
+            double lagrangeTime = SDL_GetTicks() * 0.001 + lagrangeFactor;
+
+            int r = (int)(sin(lagrangeTime) * 127 + 128);
+            int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
+            int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
+
+            for (int i = 0; i < 3; i++) {
+                double angle = (i * (2 * M_PI) / 3) + lagrangeTime;
+                double newX = targetMouseX + 20 * cos(angle);
+                double newY = targetMouseY + 20 * sin(angle);
+                vertices.push_back(Point(newX, newY));
+            }
+
+            renderer.outlinePolygon([&renderer](int x, int y, int color, SDL_Renderer* r, int __attribute__((unused))flagn) {
+                renderer.setPixel(x, y, color, r, NO_OVERLAP);
+            }, vertices, (r << 16) | (g << 8) | b, 0);
+
+            vertices.clear();
+        }
 
         // Present the screen
         tex.update(renderer.getRenderer(), renderer.getWindow());

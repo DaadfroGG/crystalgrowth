@@ -113,6 +113,9 @@ class Tex {
             SDL_DestroyTexture(this->texture);
             this->texture = SDL_CreateTextureFromSurface(renderer, surface);
         }
+        void clear() {
+            memset(this->pixels, 0, this->width * this->height * sizeof(Uint32));
+        }
 };
 typedef void (*drawFunction)(int, int, int, SDL_Renderer*, int);
 class Renderer {
