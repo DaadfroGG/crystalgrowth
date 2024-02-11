@@ -133,7 +133,17 @@ srand(time(NULL));
             
             //Add random nucleation sites along the edges of the polygon, probability based on number of nucleation sites qnd impurity
             if (rand() % 200 < crystal.getNucleationSiteNumber() * crystal.getInpurity() / 100) {
-                crystal.addNucleationSite(vertices[rand() % 3], 1.51, 0xFFFFFF, 1, 225);
+                //choose two random vertices
+                Point p1 = vertices[rand() % 3];
+                Point p2 = vertices[rand() % 3];
+                if (p1.x == p2.x && p1.y == p2.y) {
+                    p2 = vertices[(rand() + 1) % 3];
+                }
+                //choose a random point between the two vertices
+                Point p3 = Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+
+                //add a new nucleation site at 
+                crystal.addNucleationSite(p3, 1.51, 0xFFFFFF, 1, 225);
             }
 
         }
