@@ -242,8 +242,8 @@ class Time {
 int main() {
     Renderer renderer(nullptr, SDL_CreateWindow("SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0));
     Events events;
-
     Crystal crystal;
+
     Tex tex(renderer.getRenderer(), renderer.getWindow(), MAP_WIDTH, MAP_HEIGHT);
     // crystal.addNucleationSite(Point(MAP_WIDTH/2, MAP_HEIGHT/2), 1.51, 0xFFFFFF, 1, 225);
 
@@ -253,8 +253,11 @@ int main() {
     events.updateMousePosition();
     int targetMouseX = 0;
     int targetMouseY = 0;
+    int general_tick = 0;
+    int autoplace = 0;
     // Main loop
     while (!events.quit()) {
+        general_tick++;
         // Start the frame time
         frameTime.start();
         // Clear the screen
@@ -266,17 +269,36 @@ int main() {
             if (events.quit()) {
                 break;
             }
-            if (events.getType() == 1025) {
+            if (events.keyDown())
+            {
+                crystal = Crystal();
+                tex.clear();
+                renderer.clear();
+            }
+            if (events.getType() == SDL_MOUSEBUTTONDOWN) {
+            if (!autoplace && events.mouseButtonPressed(SDL_BUTTON_LEFT)) {
                 //remove all previous nucleation sites
                 crystal = Crystal();
                 //add a new nucleation site
                 crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
             }
-            if (events.keyDown()) {
-               tex.clear();
-               crystal = Crystal();
+            if (events.mouseButtonPressed(SDL_BUTTON_RIGHT)) {
+                if (autoplace)
+                    autoplace = 0;
+                else
+                    autoplace = 1;
+            }
             }
 
+
+        }
+        // Generate random crystal every 20000 ticks
+        if (autoplace && general_tick > 80 + rand() % 40 - 20)
+        {
+            printf("test %d", general_tick);
+            crystal = Crystal();
+            crystal.addNucleationSite(Point(rand()%WIDTH,rand()%HEIGHT), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
+            general_tick = 0;
         }
 
         // Adjust the size based on the desired growth rate
@@ -299,6 +321,11 @@ int main() {
             int r = (int)(sin(lagrangeTime) * 127 + 128);
             int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
             int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
+            if (autoplace) // convert to grayscale
+            {
+                int grayscale = (int)(0.299 * r + 0.587 * g + 0.114 * b);
+                r = b = g = grayscale;
+            }
 
             for (int i = 0; i < 3; i++) {
                 double angle = (i * (2 * M_PI) / 3) + lagrangeTime;
