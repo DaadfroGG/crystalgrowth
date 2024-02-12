@@ -106,7 +106,10 @@ new_B=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(255R​,255G​,255B�
 
     }
     }
-
+    int getSeed()
+    {
+        return this->seed;
+    }
     void getNucleationSite(int index, int *x, int *y, int *rate, int *color, double *size) {
         if (index < 0 || index >= (int)this->nucleationSites.size() || this->nucleationSites.size() == 0){
             return;
@@ -288,6 +291,11 @@ int main() {
                 else
                     autoplace = 1;
             }
+            if (events.mouseButtonPressed(SDL_BUTTON_MIDDLE)) {
+                 //add a new nucleation site
+                 crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFFFFFF, 1, 225, 20000, crystal.getSeed());
+            }
+
             }
 
 
