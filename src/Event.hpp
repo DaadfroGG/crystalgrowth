@@ -26,8 +26,8 @@ class Events {
         bool keyUp() {
             return this->e.type == SDL_KEYUP;
         }
-        // Check if the user released a key
-        bool keyReleased(SDL_Keycode key) {
+
+        bool keyPressed(SDL_Keycode key) {
             return this->e.key.keysym.sym == key;
         }
         // Check if the user pressed a mouse button

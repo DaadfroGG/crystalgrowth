@@ -10,11 +10,11 @@
 #include <stdbool.h>
 #include <math.h>
 #include <set>
-#define WIDTH 1800
-#define HEIGHT 1000
+#define WIDTH 1920
+#define HEIGHT 1080
 #define POINT_RADIUS 5
-#define MAP_HEIGHT 1000
-#define MAP_WIDTH 1800
+#define MAP_HEIGHT 1080
+#define MAP_WIDTH 1920
 class Point {
 public:
     int x, y;
@@ -140,6 +140,7 @@ class Renderer {
     public:
         Renderer(SDL_Renderer* renderer, SDL_Window* window);
         ~Renderer();
+        void toggleFullscreen();
         SDL_Renderer* getRenderer();
         SDL_Window* getWindow();
         // those are the functions that you can use to draw directly to the screen

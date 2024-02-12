@@ -260,7 +260,7 @@ int main() {
     int autoplace = 0;
     // Main loop
     while (!events.quit()) {
-        general_tick++;
+
         // Start the frame time
         frameTime.start();
         // Clear the screen
@@ -274,9 +274,18 @@ int main() {
             }
             if (events.keyDown())
             {
+                if (events.keyPressed(SDLK_ESCAPE))
+                    {
+                        events.quit();
+                    }
+                if (events.keyPressed(SDLK_f) || events.keyPressed(SDLK_F11))
+                {
+                    renderer.toggleFullscreen();
+                }
+                else{                
                 crystal = Crystal();
                 tex.clear();
-                renderer.clear();
+                renderer.clear();}
             }
             if (events.getType() == SDL_MOUSEBUTTONDOWN) {
             if (!autoplace && events.mouseButtonPressed(SDL_BUTTON_LEFT)) {
@@ -295,18 +304,24 @@ int main() {
                  //add a new nucleation site
                  crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFFFFFF, 1, 225, 20000, crystal.getSeed());
             }
-
+        
             }
 
 
         }
         // Generate random crystal every 20000 ticks
-        if (autoplace && general_tick > 80 + rand() % 40 - 20)
+        if (autoplace && general_tick++ && general_tick % 35 == 0)
         {
-            printf("test %d", general_tick);
+            printf("test %d\n", general_tick);
             crystal = Crystal();
             crystal.addNucleationSite(Point(rand()%WIDTH,rand()%HEIGHT), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
-            general_tick = 0;
+            if (general_tick > 10000)
+            {
+                crystal = Crystal();
+                tex.clear();
+                renderer.clear();
+                general_tick = 0;
+            }
         }
 
         // Adjust the size based on the desired growth rate
@@ -329,7 +344,7 @@ int main() {
             int r = (int)(sin(lagrangeTime) * 127 + 128);
             int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
             int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
-            if (autoplace) // convert to grayscale
+            if (!autoplace) // convert to grayscale
             {
                 int grayscale = (int)(0.299 * r + 0.587 * g + 0.114 * b);
                 r = b = g = grayscale;
