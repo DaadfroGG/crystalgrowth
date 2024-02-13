@@ -2,7 +2,7 @@
 // Constructor
 Renderer::Renderer(SDL_Renderer* __attribute__((unused))renderer, SDL_Window* window) {
     this->window = window;
-    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
+    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_SOFTWARE);
     SDL_ShowCursor(SDL_DISABLE);
     if (this->renderer == nullptr) {
         std::cout << "Renderer could not be created! SDL Error: " << SDL_GetError() << std::endl;

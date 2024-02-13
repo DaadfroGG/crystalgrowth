@@ -247,7 +247,7 @@ class Time {
 };
      
 int main() {
-    Renderer renderer(nullptr, SDL_CreateWindow("SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0));
+    Renderer renderer(nullptr, SDL_CreateWindow("SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN));
     Events events;
     Crystal crystal;
 
@@ -262,6 +262,7 @@ int main() {
     int targetMouseY = 0;
     int general_tick = 0;
     int autoplace = 0;
+    int quitpassword = 0;
     // Main loop
     while (!events.quit()) {
 
@@ -279,14 +280,20 @@ int main() {
             }
             if (events.keyDown())
             {
-                if (events.keyPressed(SDLK_ESCAPE))
-                    {
-                        events.quit();
-                    }
-                if (events.keyPressed(SDLK_f) || events.keyPressed(SDLK_F11))
+
+                if (events.keyPressed(SDLK_ESCAPE) && quitpassword == 0)
                 {
-                    renderer.toggleFullscreen();
+                    quitpassword = 1;
                 }
+                else if (events.keyPressed(SDLK_ESCAPE) && quitpassword == 1)
+                {
+                    quitpassword = 0;
+                }
+                else if (events.keyPressed(SDLK_q) && quitpassword == 1)
+                {
+                    return 0;
+                }
+                
                 else{                
                 crystal = Crystal();
                 tex.clear();
@@ -295,9 +302,11 @@ int main() {
             if (events.getType() == SDL_MOUSEBUTTONDOWN) {
             if (!autoplace && events.mouseButtonPressed(SDL_BUTTON_LEFT)) {
                 //remove all previous nucleation sites
+
                 crystal = Crystal();
                 //add a new nucleation site
                 crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
+                        
             }
             if (events.mouseButtonPressed(SDL_BUTTON_RIGHT)) {
                 if (autoplace)
@@ -322,14 +331,14 @@ int main() {
         // Generate random crystal every 20000 ticks
         if (autoplace && general_tick++ && general_tick % 130 == 0)
         {
-            printf("test %d\n", general_tick);
             crystal = Crystal();
+            //add a new nucleation site
             crystal.addNucleationSite(Point(rand()%WIDTH,rand()%HEIGHT), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
-            //remove if too many nucleation sites
-            if (crystal.getNucleationSiteNumber() > 10)
+            if (general_tick > 20000)
             {
                 crystal = Crystal();
                 tex.clear();
+
                 renderer.clear();
                 general_tick = 0;
             }
@@ -345,36 +354,35 @@ int main() {
         renderer.drawTex(&tex, WIDTH / 2 - MAP_WIDTH / 2, HEIGHT / 2 - MAP_HEIGHT / 2);
 
         std::vector<Point> vertices;
+            for (int lagrange = 0; lagrange < 10; ++lagrange) {
+                targetMouseX += (events.getMouseX() - targetMouseX) * lagrange * 0.01;
+                targetMouseY += (events.getMouseY() - targetMouseY) * lagrange * 0.01;
+                double lagrangeFactor = lagrange * 0.1; // Adjust the factor as needed
 
-        for (int lagrange = 0; lagrange < 10; ++lagrange) {
-            targetMouseX += (events.getMouseX() - targetMouseX) * lagrange * 0.01;
-            targetMouseY += (events.getMouseY() - targetMouseY) * lagrange * 0.01;
-            double lagrangeFactor = lagrange * 0.1; // Adjust the factor as needed
+                double lagrangeTime = SDL_GetTicks() * 0.001 + lagrangeFactor;
 
-            double lagrangeTime = SDL_GetTicks() * 0.001 + lagrangeFactor;
+                int r = (int)(sin(lagrangeTime) * 127 + 128);
+                int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
+                int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
+                if (autoplace) // convert to grayscale
+                {
+                    int grayscale = (int)(0.299 * r + 0.587 * g + 0.114 * b);
+                    r = b = g = grayscale;
+                }
 
-            int r = (int)(sin(lagrangeTime) * 127 + 128);
-            int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
-            int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
-            if (autoplace) // convert to grayscale
-            {
-                int grayscale = (int)(0.299 * r + 0.587 * g + 0.114 * b);
-                r = b = g = grayscale;
+                for (int i = 0; i < 3; i++) {
+                    double angle = (i * (2 * M_PI) / 3) + lagrangeTime;
+                    double newX = targetMouseX + 20 * cos(angle);
+                    double newY = targetMouseY + 20 * sin(angle);
+                    vertices.push_back(Point(newX, newY));
+                }
+
+                renderer.outlinePolygon([&renderer](int x, int y, int color, SDL_Renderer* r, int __attribute__((unused))flagn) {
+                    renderer.setPixel(x, y, color, r, NO_OVERLAP);
+                }, vertices, (r << 16) | (g << 8) | b, 0);
+
+                vertices.clear();
             }
-
-            for (int i = 0; i < 3; i++) {
-                double angle = (i * (2 * M_PI) / 3) + lagrangeTime;
-                double newX = targetMouseX + 20 * cos(angle);
-                double newY = targetMouseY + 20 * sin(angle);
-                vertices.push_back(Point(newX, newY));
-            }
-
-            renderer.outlinePolygon([&renderer](int x, int y, int color, SDL_Renderer* r, int __attribute__((unused))flagn) {
-                renderer.setPixel(x, y, color, r, NO_OVERLAP);
-            }, vertices, (r << 16) | (g << 8) | b, 0);
-
-            vertices.clear();
-        }
 
         // Present the screen
         tex.update(renderer.getRenderer(), renderer.getWindow());

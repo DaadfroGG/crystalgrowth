@@ -10,11 +10,14 @@
 #include <stdbool.h>
 #include <math.h>
 #include <set>
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 2580
+#define HEIGHT 1440
 #define POINT_RADIUS 5
-#define MAP_HEIGHT 1080
-#define MAP_WIDTH 1920
+// #define MAP_HEIGHT 1080
+// #define MAP_WIDTH 1920
+#define MAP_WIDTH 2580
+#define MAP_HEIGHT 1440
+
 class Point {
 public:
     int x, y;

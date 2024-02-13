@@ -4,7 +4,7 @@ HEADER =
 LIBS = -lSDL2 
 NAME = crystal
 CPPFLAGS = -g3
-CC = c++
+CC = g++
 
 all: $(NAME)
 
