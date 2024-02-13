@@ -58,6 +58,9 @@ class Events {
         int getMouseY() {
             return this->mouseY;
         }
+        int mouseWheelY() {
+            return this->e.wheel.y;
+        }
         int getType() {
             return this->e.type;
         }

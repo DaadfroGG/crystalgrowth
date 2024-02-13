@@ -171,6 +171,9 @@ new_B=int((1−abs(2×l−1))×s×clamp(1−abs(rgb_to_hls(255R​,255G​,255B�
             }
         }
     }
+    void addAmountOfMaterial(int amount) {
+        this->total_material += amount;
+    }
 
 
 };
@@ -240,6 +243,7 @@ class Time {
         void setFrameDelay(int delay) {
             this->frameDelay = delay;
         }
+        
 };
      
 int main() {
@@ -267,6 +271,7 @@ int main() {
         renderer.clear();
         // Update mouse position
         events.updateMousePosition();
+        // Handle events
         // Handle events
         while (events.poll()) {
             if (events.quit()) {
@@ -304,18 +309,24 @@ int main() {
                  //add a new nucleation site
                  crystal.addNucleationSite(Point(events.getMouseX() - WIDTH / 2 + MAP_WIDTH / 2, events.getMouseY() - HEIGHT / 2 + MAP_HEIGHT / 2), 1.51, 0xFFFFFF, 1, 225, 20000, crystal.getSeed());
             }
-        
-            }
-
 
         }
+        if (events.getType() == SDL_MOUSEWHEEL)
+        {
+            if (events.mouseWheelY() > 0)
+                crystal.addAmountOfMaterial(1000);
+            else
+                crystal.addAmountOfMaterial(-1000);
+        }
+        }
         // Generate random crystal every 20000 ticks
-        if (autoplace && general_tick++ && general_tick % 35 == 0)
+        if (autoplace && general_tick++ && general_tick % 130 == 0)
         {
             printf("test %d\n", general_tick);
             crystal = Crystal();
             crystal.addNucleationSite(Point(rand()%WIDTH,rand()%HEIGHT), 1.51, 0xFF00FF, 1, 225, 1000, rand() % 1000);
-            if (general_tick > 10000)
+            //remove if too many nucleation sites
+            if (crystal.getNucleationSiteNumber() > 10)
             {
                 crystal = Crystal();
                 tex.clear();
@@ -339,12 +350,13 @@ int main() {
             targetMouseX += (events.getMouseX() - targetMouseX) * lagrange * 0.01;
             targetMouseY += (events.getMouseY() - targetMouseY) * lagrange * 0.01;
             double lagrangeFactor = lagrange * 0.1; // Adjust the factor as needed
+
             double lagrangeTime = SDL_GetTicks() * 0.001 + lagrangeFactor;
 
             int r = (int)(sin(lagrangeTime) * 127 + 128);
             int g = (int)(sin(lagrangeTime + 2) * 127 + 128);
             int b = (int)(sin(lagrangeTime + 4) * 127 + 128);
-            if (!autoplace) // convert to grayscale
+            if (autoplace) // convert to grayscale
             {
                 int grayscale = (int)(0.299 * r + 0.587 * g + 0.114 * b);
                 r = b = g = grayscale;
